@@ -8,27 +8,50 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
     strategy:
       matrix:
         browser: [chrome]
         shard: [1, 2, 3]
+
     steps:
     - uses: actions/checkout@v4
+
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 6.0.x
+
     - name: Restore dependencies
       run: dotnet restore
+
     - name: Build
       run: dotnet build --no-restore
-    - name: Test
+
+    - name: Run tests
       run: dotnet test --logger:trx --results-directory TestResults
- # 5. Upload test results
+
     - name: Upload test results
       uses: actions/upload-artifact@v3
       with:
         name: test-results
         path: TestResults/
+
+    # Capture and upload screenshot if test fails
+    - name: Capture and upload screenshot on failure
+      if: failure()
+      run: |
+        echo "Test failed. Uploading screenshot..."
+        if [ -f "screenshot.png" ]; then
+          mkdir -p artifacts
+          mv screenshot.png artifacts/
+        fi
+      continue-on-error: true
+
+    - name: Upload screenshot if test fails
+      if: failure()
+      uses: actions/upload-artifact@v3
+      with:
+        name: screenshot
+        path: artifacts/screenshot.png
+
