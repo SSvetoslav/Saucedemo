@@ -1,60 +1,63 @@
-name: NUnit Tests and Allure Reports
+name: Run Tests in Parallel with Multiple .NET Versions
 
 on:
   push:
     branches:
-      - master
-  pull_request:
-    branches:
-      - master
+      - main
 
 jobs:
-  test:
-    runs-on: windows-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+  run-tests:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        dotnet-version: [ '6.0.x' ]
+        browser: [ 'chrome' ]
+      fail-fast: false
 
-      - name: Install .NET Core
+    steps:
+      - uses: actions/checkout@v4
+
+      # Set up .NET SDK versions
+      - name: Setup dotnet ${{ matrix.dotnet-version }}
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: 6.0.x
+          dotnet-version: ${{ matrix.dotnet-version }}
+      
+      # Install dependencies
+      - name: Install dependencies
+        run: |
+          dotnet restore
+          dotnet tool install --global Selenium.WebDriver
+          dotnet tool install --global Selenium.WebDriver.ChromeDriver
+      
+      # Set up Selenium and run tests in parallel
+      - name: Run tests in parallel on Chrome
+        run: |
+          # Start Selenium Grid or WebDriver on different Chrome instances (adjust as needed)
+          docker-compose up -d  # Start the required services (like Selenium Grid)
 
-      - name: Restore dependencies
-        run: dotnet restore
+          # Run tests on the parallel browsers
+          dotnet test --filter Browser=${{ matrix.browser }} --logger "trx;LogFileName=TestResults-${{ matrix.dotnet-version }}.trx" --results-directory "TestResults-${{ matrix.dotnet-version }}"
 
-      - name: Run Tests
-        run: dotnet test --logger "trx;LogFileName=test-results.trx" --results-directory ./TestResults
+      # Take screenshots on test failure
+      - name: Take screenshot if test fails
+        if: ${{ failure() }}
+        run: |
+          mkdir -p screenshots
+          cp -r $(pwd)/TestResults-${{ matrix.dotnet-version }}/*.png screenshots/
 
-      - name: Upload Test Results
+      # Upload test results
+      - name: Upload dotnet test results
         uses: actions/upload-artifact@v4
         with:
-          name: test-results
-          path: ./TestResults/test-results.trx
-          retention-days: 20
-
-  deploy:
-    needs: test
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Download Test Results
-        uses: actions/download-artifact@v4
+          name: dotnet-results-${{ matrix.dotnet-version }}
+          path: TestResults-${{ matrix.dotnet-version }}
+        if: ${{ always() }}
+      
+      # Upload screenshots on failure
+      - name: Upload screenshots on failure
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v4
         with:
-          name: test-results
-          path: ./TestResults
-
-      - name: Install Allure Commandline
-        run: |
-          npm install -g allure-commandline --save-dev
-
-      - name: Generate Allure Report
-        run: |
-          allure generate ./TestResults --clean --output ./allure-report
-
-      - name: Deploy Allure Report to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3.9.3
-        with:
-          PERSONAL_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PUBLISH_BRANCH: gh-pages
-          PUBLISH_DIR: ./allure-report
+          name: screenshots
+          path: screenshots/
