@@ -27,10 +27,9 @@ Copy code
 │   ├── Credentials/          # Contains User credentials
 │   ├── Pages/                # Page Object Model (POM) classes  
 │   ├── Tests/                # Contains test files  
-│   ├── Utils/                # Helper and utility classes  
+│   ├── Utils/                # Helper and utility classes 
 │   └── workflows/  
 │       └── selenium_tests.yml # GitHub Actions workflow definition  
-├── README.md                 # Project documentation  
 └── .gitignore                # Ignored files 
 
 Prerequisites
