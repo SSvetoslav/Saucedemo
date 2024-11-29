@@ -29,20 +29,21 @@ jobs:
       run: dotnet build --no-restore
 
     - name: Run tests
-      #run: dotnet test --logger:trx --results-directory TestResults
-      run: dotnet test --logger "trx;LogFileName=test-results.trx" --results-directory TestResults
+      run: dotnet test --logger "trx;LogFileName=test-results-$(date +%Y%m%d%H%M%S).trx" --results-directory TestResults
 
     - name: Retry tests on failure
       run: |
-        dotnet test --logger "trx;LogFileName=test-results.trx" --results-directory TestResults || dotnet test --logger "trx;LogFileName=test-results.trx" --results-directory TestResults
-        
+        dotnet test --logger "trx;LogFileName=test-results-$(date +%Y%m%d%H%M%S).trx" --results-directory TestResults || dotnet test --logger "trx;LogFileName=test-results-$(date +%Y%m%d%H%M%S).trx" --results-directory TestResults
+
     - name: Upload test results
       uses: actions/upload-artifact@v3
       with:
         name: test-results
         path: TestResults/
 
-    # Capture and upload screenshot if test fails
+    - name: List test result files
+      run: ls -la TestResults/
+
     - name: Capture and upload screenshot on failure
       if: failure()
       run: |
@@ -50,6 +51,8 @@ jobs:
         if [ -f "screenshot.png" ]; then
           mkdir -p artifacts
           mv screenshot.png artifacts/
+        else
+          echo "No screenshot found."
         fi
       continue-on-error: true
 
