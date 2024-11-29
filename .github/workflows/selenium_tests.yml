@@ -21,11 +21,11 @@ jobs:
       with:
         dotnet-version: 6.0.x
     - name: Restore dependencies
-      run: dotnet restore **/*.csproj
+      run: dotnet restore
     - name: Build
-      run: dotnet build Saucedemo --no-restore
+      run: dotnet build --no-restore
     - name: Test
-      run: dotnet test Saucedemo --logger:trx --results-directory TestResults
+      run: dotnet test --logger:trx --results-directory TestResults
  # 5. Upload test results
     - name: Upload test results
       uses: actions/upload-artifact@v3
