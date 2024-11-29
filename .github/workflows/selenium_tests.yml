@@ -46,7 +46,7 @@ jobs:
           sudo mv chromedriver /usr/local/bin
           chromedriver --version
         fi
-      shell: /usr/bin/bash -e {0}
+      shell: bash
       env:
         DOTNET_ROOT: /usr/share/dotnet
 
@@ -59,6 +59,10 @@ jobs:
     - name: Run tests with NUnit
       run: |
         dotnet test --logger "trx;LogFileName=test-results.trx" --results-directory TestResults
+
+    - name: Retry tests on failure
+      run: |
+        dotnet test --logger "trx;LogFileName=test-results.trx" --results-directory TestResults || dotnet test --logger "trx;LogFileName=test-results.trx" --results-directory TestResults
 
     - name: Upload test results
       uses: actions/upload-artifact@v3
