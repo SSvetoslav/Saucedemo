@@ -3,7 +3,7 @@ name: Run Tests in Parallel with Multiple .NET Versions
 on:
   push:
     branches:
-      - main
+      - master
 
 jobs:
   run-tests:
