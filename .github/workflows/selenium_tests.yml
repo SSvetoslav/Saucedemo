@@ -13,7 +13,6 @@ jobs:
       matrix:
         browser: [chrome]
         shard: [1, 2, 3]
-
     steps:
     - uses: actions/checkout@v4
 
@@ -22,36 +21,38 @@ jobs:
       with:
         dotnet-version: 6.0.x
 
+    - name: Setup Selenium WebDriver
+      run: |
+        # Fetch the latest stable Chrome version
+        CHROME_VERSION=$(google-chrome-stable --version | awk '{print $3}')
+        VERSION=$(echo $CHROME_VERSION | sed 's/\.[0-9]*$//') # Get the major version
+        echo "Installing ChromeDriver for version: $VERSION"
+    
+        # Download and install the corresponding ChromeDriver
+        wget https://chromedriver.storage.googleapis.com/LATEST_RELEASE_$VERSION
+        DRIVER_VERSION=$(cat LATEST_RELEASE_$VERSION)
+        wget https://chromedriver.storage.googleapis.com/$DRIVER_VERSION/chromedriver_linux64.zip
+    
+        # Unzip and move to /usr/local/bin
+        unzip chromedriver_linux64.zip
+        sudo mv chromedriver /usr/local/bin
+        chromedriver --version
+
     - name: Restore dependencies
       run: dotnet restore
 
     - name: Build
       run: dotnet build --no-restore
 
-    - name: Run tests
-      run: dotnet test --logger:trx --results-directory TestResults
+    - name: Run tests with NUnit
+      run: |
+        dotnet test --logger "trx;LogFileName=test-results.trx" --results-directory TestResults --filter "TestCategory=Functional"
 
     - name: Upload test results
       uses: actions/upload-artifact@v3
       with:
         name: test-results
-        path: TestResults/
+        path: TestResults/test-results.trx
 
     # Capture and upload screenshot if test fails
-    - name: Capture and upload screenshot on failure
-      if: failure()
-      run: |
-        echo "Test failed. Uploading screenshot..."
-        if [ -f "screenshot.png" ]; then
-          mkdir -p artifacts
-          mv screenshot.png artifacts/
-        fi
-      continue-on-error: true
-
-    - name: Upload screenshot if test fails
-      if: failure()
-      uses: actions/upload-artifact@v3
-      with:
-        name: screenshot
-        path: artifacts/screenshot.png
-
+ 
