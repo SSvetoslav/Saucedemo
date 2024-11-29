@@ -1,15 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Saucedemo.Utils
+﻿namespace Saucedemo.Utils
 {
     public enum Browser
     {
-        Fiferox,
-        Egde,
         Chrome
     }
 }

@@ -1,14 +1,9 @@
 ﻿using Saucedemo.Credentials;
 using Saucedemo.Utils;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Saucedemo.Tests.WEB.Negatives
 {
-    [TestFixture(Browser.Chrome)]
+    [TestFixture(Browser.Chrome), Parallelizable(ParallelScope.All)]
     internal class Negative_Tests_Login : WebTest
     {
         public Negative_Tests_Login(Browser browser) : base(browser) {}
