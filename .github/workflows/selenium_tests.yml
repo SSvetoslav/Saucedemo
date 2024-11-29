@@ -7,7 +7,7 @@ on:
     branches: [ "master" ]
 
 jobs:
-  execute-seleium-iu-tests:
+  execute-selenium-ui-tests:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -44,21 +44,19 @@ jobs:
     - name: List test result files
       run: ls -la TestResults/
 
-    - name: Capture and upload screenshot on failure
+    - name: Capture and upload screenshots on failure
       if: failure()
       run: |
-        echo "Test failed. Uploading screenshot..."
-        if [ -f "screenshot.png" ]; then
-          mkdir -p artifacts
-          mv screenshot.png artifacts/
-        else
-          echo "No screenshot found."
-        fi
+        echo "Test failed. Uploading screenshots..."
+        mkdir -p TestResults/screenshots
+        cp TestResults/screenshots/*.png TestResults/screenshots/ || true
       continue-on-error: true
 
-    - name: Upload screenshot if test fails
+    - name: Upload screenshots if test fails
       if: failure()
       uses: actions/upload-artifact@v3
       with:
-        name: screenshot
-        path: artifacts/screenshot.png
+        name: screenshots
+        path: TestResults/screenshots/*
+        if-no-files-found: warn
+        include-hidden-files: false
