@@ -3,7 +3,8 @@ using Saucedemo.Utils;
 
 namespace Saucedemo.Tests.WEB.Negatives
 {
-    [TestFixture(Browser.Chrome), Parallelizable(ParallelScope.All)]
+    [TestFixture(Browser.Chrome)]
+    [Parallelizable]
     internal class Negative_Tests_Login : WebTest
     {
         public Negative_Tests_Login(Browser browser) : base(browser) {}

@@ -4,7 +4,8 @@ using Saucedemo.Utils.Products;
 
 namespace Saucedemo.Tests.WEB.Positives
 {
-    [TestFixture(Browser.Chrome), Parallelizable(ParallelScope.All)]
+    [TestFixture(Browser.Chrome)]
+    [Parallelizable]
     internal class Positive_Tests_Login : WebTest
     {
         public Positive_Tests_Login(Browser browser) : base(browser) {}
