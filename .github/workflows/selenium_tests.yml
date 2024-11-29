@@ -1,46 +1,34 @@
-name: Selenium Tests
+name: Selenium test - Saucedemo
 
 on:
   push:
-    branches:
-      - master
+    branches: [ "master" ]
   pull_request:
+    branches: [ "master" ]
 
 jobs:
-  selenium-tests:
-    name: Run Selenium Tests
-    runs-on: ubuntu-latest
+  build:
 
+    runs-on: ubuntu-latest
     strategy:
       matrix:
-        browser: [chrome] # Add more browsers here if needed
-        shard: [1, 2, 3] # Divide tests into chunks (shards)
-
+        browser: [chrome]
+        shard: [1, 2, 3]
     steps:
-      # 1. Checkout repository code
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      # 2. Set up .NET environment
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v3
-        with:
-          dotnet-version: '6.0.x'
-
-      # 3. Install dependencies
-      - name: Install dependencies
-        run: dotnet restore
-
-      # 4. Run Selenium WebDriver tests
-      - name: Execute tests (Shard ${{ matrix.shard }})
-        env:
-          TEST_SHARD: ${{ matrix.shard }}
-        run: |
-          dotnet test --filter "TestShard=${{ matrix.shard }}" --logger:trx --results-directory TestResults
-
-      # 5. Upload test results
-      - name: Upload test results
-        uses: actions/upload-artifact@v3
-        with:
-          name: test-results
-          path: TestResults/
+    - uses: actions/checkout@v4
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 6.0.x
+    - name: Restore dependencies
+      run: dotnet restore **/*.csproj
+    - name: Build
+      run: dotnet build Saucedemo --no-restore
+    - name: Test
+      run: dotnet test Saucedemo --logger:trx --results-directory TestResults
+ # 5. Upload test results
+    - name: Upload test results
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-results
+        path: TestResults/
