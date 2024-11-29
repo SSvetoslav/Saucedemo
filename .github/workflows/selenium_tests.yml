@@ -1,0 +1,46 @@
+name: Selenium Tests
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+
+jobs:
+  selenium-tests:
+    name: Run Selenium Tests
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        browser: [chrome] # Add more browsers here if needed
+        shard: [1, 2, 3] # Divide tests into chunks (shards)
+
+    steps:
+      # 1. Checkout repository code
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # 2. Set up .NET environment
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '6.0.x'
+
+      # 3. Install dependencies
+      - name: Install dependencies
+        run: dotnet restore
+
+      # 4. Run Selenium WebDriver tests
+      - name: Execute tests (Shard ${{ matrix.shard }})
+        env:
+          TEST_SHARD: ${{ matrix.shard }}
+        run: |
+          dotnet test --filter "TestShard=${{ matrix.shard }}" --logger:trx --results-directory TestResults
+
+      # 5. Upload test results
+      - name: Upload test results
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-results
+          path: TestResults/
