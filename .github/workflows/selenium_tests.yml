@@ -58,7 +58,7 @@ jobs:
 
     - name: Run tests with NUnit
       run: |
-        dotnet test --logger "trx;LogFileName=test-results.trx" --results-directory TestResults --filter "TestCategory=Functional"
+        dotnet test --logger "trx;LogFileName=test-results.trx" --results-directory TestResults
 
     - name: Upload test results
       uses: actions/upload-artifact@v3
