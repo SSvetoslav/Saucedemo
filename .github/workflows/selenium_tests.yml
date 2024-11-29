@@ -1,4 +1,4 @@
-name: NUnit Tests and Deploy Allure Reports
+name: NUnit Tests and Allure Reports
 
 on:
   push:
@@ -11,7 +11,6 @@ on:
 jobs:
   test:
     runs-on: windows-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -27,12 +26,11 @@ jobs:
       - name: Run Tests
         run: dotnet test --logger "trx;LogFileName=test-results.trx" --results-directory ./TestResults
 
-      - name: Upload Allure Results
+      - name: Upload Test Results
         uses: actions/upload-artifact@v4
         with:
-          name: allure-results
-          path: .\bin\Debug\net6.0\allure-results
-          if-no-files-found: error
+          name: test-results
+          path: ./TestResults/test-results.trx
           retention-days: 20
 
   deploy:
@@ -40,34 +38,23 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Download Build Artifact
+      - name: Download Test Results
         uses: actions/download-artifact@v4
         with:
-          name: allure-results
-          path: ./allure-results
+          name: test-results
+          path: ./TestResults
 
-      - name: Get Allure history (optional)
-        uses: actions/checkout@v4
-        if: always()
-        continue-on-error: true
-        with:
-          ref: gh-pages
-          path: gh-pages
+      - name: Install Allure Commandline
+        run: |
+          npm install -g allure-commandline --save-dev
 
-      - name: Generate report
-        uses: simple-elf/allure-report-action@v1.7
-        if: always()
-        id: allure-report
-        with:
-          allure_results: ./allure-results
-          gh_pages: gh-pages
-          allure_history: allure-history
-          keep_reports: 20
+      - name: Generate Allure Report
+        run: |
+          allure generate ./TestResults --clean --output ./allure-report
 
-      - name: Deploy report to Github Pages
-        if: always()
+      - name: Deploy Allure Report to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3.9.3
         with:
           PERSONAL_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PUBLISH_BRANCH: gh-pages
-          PUBLISH_DIR: allure-report
+          PUBLISH_DIR: ./allure-report
