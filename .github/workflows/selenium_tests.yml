@@ -13,6 +13,7 @@ jobs:
       matrix:
         browser: [chrome]
         shard: [1, 2, 3]
+
     steps:
     - uses: actions/checkout@v4
 
@@ -21,54 +22,25 @@ jobs:
       with:
         dotnet-version: 6.0.x
 
-    - name: Setup Selenium WebDriver
-      run: |
-        # Fetch the latest stable Chrome version
-        CHROME_VERSION=$(google-chrome-stable --version | awk '{print $3}')
-        VERSION=$(echo $CHROME_VERSION | sed 's/\.[0-9]*$//') # Get the major version
-        echo "Installing ChromeDriver for version: $VERSION"
-        
-        # Download and install the corresponding ChromeDriver
-        DRIVER_URL="https://chromedriver.storage.googleapis.com/LATEST_RELEASE_$VERSION"
-        if wget --spider $DRIVER_URL 2>/dev/null; then
-          DRIVER_VERSION=$(wget -qO- $DRIVER_URL)
-          wget https://chromedriver.storage.googleapis.com/$DRIVER_VERSION/chromedriver_linux64.zip
-          # Unzip and move to /usr/local/bin
-          unzip chromedriver_linux64.zip
-          sudo mv chromedriver /usr/local/bin
-          chromedriver --version
-        else
-          echo "ChromeDriver for version $VERSION not found, falling back to latest stable."
-          LATEST_DRIVER_VERSION=$(wget -qO- https://chromedriver.storage.googleapis.com/LATEST_RELEASE)
-          wget https://chromedriver.storage.googleapis.com/$LATEST_DRIVER_VERSION/chromedriver_linux64.zip
-          # Unzip and move to /usr/local/bin
-          unzip chromedriver_linux64.zip
-          sudo mv chromedriver /usr/local/bin
-          chromedriver --version
-        fi
-      shell: bash
-      env:
-        DOTNET_ROOT: /usr/share/dotnet
-
     - name: Restore dependencies
       run: dotnet restore
 
     - name: Build
       run: dotnet build --no-restore
 
-    - name: Run tests with NUnit
-      run: |
-        dotnet test --logger "trx;LogFileName=test-results.trx" --results-directory TestResults
+    - name: Run tests
+      #run: dotnet test --logger:trx --results-directory TestResults
+      run: dotnet test --logger "trx;LogFileName=test-results.trx" --results-directory TestResults
 
     - name: Retry tests on failure
       run: |
         dotnet test --logger "trx;LogFileName=test-results.trx" --results-directory TestResults || dotnet test --logger "trx;LogFileName=test-results.trx" --results-directory TestResults
-
+        
     - name: Upload test results
       uses: actions/upload-artifact@v3
       with:
         name: test-results
-        path: TestResults/test-results.trx
+        path: TestResults/
 
     # Capture and upload screenshot if test fails
     - name: Capture and upload screenshot on failure
