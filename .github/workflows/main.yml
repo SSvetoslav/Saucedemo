@@ -32,7 +32,7 @@ jobs:
         run: dotnet build --no-restore
 
       - name: Run Test
-        run: dotnet test --filter "(TestCategory=PositiveTests|TestCategory=NegativeTests)" --logger "trx;LogFileName=combined-results.trx" --results-directory TestResults
+        run: dotnet test --filter "(TestCategory=PositiveTests|TestCategory=NegativeTests)" --logger "trx;LogFileName=results.trx" --results-directory TestResults
 
       - name: Upload test results
         uses: actions/upload-artifact@v3
@@ -43,53 +43,14 @@ jobs:
       - name: Test Reporter
         uses: dorny/test-reporter@v1
         with:
-          # Regex or name of artifact containing test results
-          artifact: 'TestResults/*.trx'
-
-          # Name of the Check Run which will be created in GitHub
+          artifact: 'TestResults'
           name: '.NET Test Report'
-
-          # Path to test results using wildcards
           path: 'TestResults/*.trx'
-
-          # Replace backslashes with forward slashes (useful for Windows paths)
           path-replace-backslashes: 'false'
-
-          # Format of the test results
           reporter: 'dotnet-trx'
-
-          # Generate only the summary for the report
-          only-summary: 'false'
-
-          # Enable Actions Summary generation
-          use-actions-summary: 'true'
-
-          # Title of badges shown in Actions Summary
-          badge-title: '.NET Selenium Tests'
-
-          # Test suites listing:
-          #   all - lists all suites
-          #   failed - lists only failed suites
-          #   none - no suites listed
           list-suites: 'failed'
-
-          # Test cases listing:
-          #   all - lists all test cases
-          #   failed - lists only failed test cases
-          #   none - no test cases listed
           list-tests: 'failed'
-
-          # Maximum number of annotations created with error messages
           max-annotations: '10'
-
-          # Fail the workflow if test report contains failed tests
           fail-on-error: 'true'
-
-          # Fail the workflow if no test results were found
           fail-on-empty: 'true'
-
-          # Relative path under $GITHUB_WORKSPACE
-          working-directory: ''
-
-          # Token for interacting with GitHub API (defaults to `${{ github.token }}`)
           token: '${{ secrets.GITHUB_TOKEN }}'
