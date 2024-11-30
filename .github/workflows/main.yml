@@ -1,17 +1,15 @@
-name: .NET Selenium Tests for Saucedemo
+name: .NET Selenium test - Saucedemo
 
 on:
   push:
-    branches:
-      - "master"
-
+    branches: [ "master" ]
 jobs:
   build:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        browser: [chrome]
-        category: [PositiveTests, NegativeTests]
+        browser: [ chrome ]
+        category: [ PositiveTests, NegativeTests ]
 
     steps:
       - uses: actions/checkout@v4
@@ -27,21 +25,12 @@ jobs:
       - name: Build
         run: dotnet build --no-restore
 
-      - name: Run Tests
-        run: |
-          if [ "${{ matrix.category }}" == "PositiveTests" ]; then
-            dotnet test Tests/WEB/Positives/PositiveTestLogin.cs --logger "trx;LogFileName=combined-results$(date +%Y%m%d%H%M%S).trx" --results-directory TestResults
-          else
-            dotnet test Tests/WEB/Negatives/NegativeTestsLogin.cs --logger "trx;LogFileName=combined-results$(date +%Y%m%d%H%M%S).trx" --results-directory TestResults
-          fi
+      - name: Run Test
+        run: dotnet test --filter "(TestCategory=PositiveTests|TestCategory=NegativeTests)" --logger "trx;LogFileName=combined-results$(date +%Y%m%d%H%M%S).trx" --results-directory TestResults
 
       - name: Retry tests on failure
-        run: |
-          if [ "${{ matrix.category }}" == "PositiveTests" ]; then
-            dotnet test Tests/WEB/Positives/PositiveTestLogin.cs --logger "trx;LogFileName=test-results-$(date +%Y%m%d%H%M%S).trx" --results-directory TestResults || dotnet test Tests/WEB/Positives/PositiveTestLogin.cs --logger "trx;LogFileName=test-results-$(date +%Y%m%d%H%M%S).trx" --results-directory TestResults
-          else
-            dotnet test Tests/WEB/Negatives/NegativeTestsLogin.cs --logger "trx;LogFileName=test-results-$(date +%Y%m%d%H%M%S).trx" --results-directory TestResults || dotnet test Tests/WEB/Negatives/NegativeTestsLogin.cs --logger "trx;LogFileName=test-results-$(date +%Y%m%d%H%M%S).trx" --results-directory TestResults
-          fi
+        run: | 
+          dotnet test --logger "trx;LogFileName=test-results-$(date +%Y%m%d%H%M%S).trx" --results-directory TestResults || dotnet test --logger "trx;LogFileName=test-results-$(date +%Y%m%d%H%M%S).trx" --results-directory TestResults
 
       - name: Upload test results
         uses: actions/upload-artifact@v3
@@ -70,12 +59,3 @@ jobs:
         with:
           name: screenshot
           path: artifacts/screenshot.png
-
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Use action to generate test report
-        uses: zyborg/dotnet-tests-report@v1
-        with:
-          project_path: Tests/WEB/${{ matrix.category == 'PositiveTests' && 'Positives/Positive_Tests_Login.cs' || 'Negatives/Negative_Tests_Login.cs' }}
-          report_name: '.NET Selenium test - Saucedemo'
