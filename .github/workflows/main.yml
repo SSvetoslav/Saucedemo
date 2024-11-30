@@ -39,13 +39,13 @@ jobs:
         dotnet test --logger "trx;LogFileName=test-results-$(date +%Y%m%d%H%M%S).trx" --results-directory TestResults || dotnet test --logger "trx;LogFileName=test-results-$(date +%Y%m%d%H%M%S).trx" --results-directory TestResults
         
     - name: Convert tests results to HTML
-      uses: mikepenz/action-gh-release@v2
+      uses: mikepenz/action-gh-release@v1
       with:
         args: | 
           npx trx2html ./TestResults/test-results.trx -o ./TestResults/test-report.html
           
     - name: Upload test results
-      uses: actions/upload-artifact@v3
+      uses: mikepenz/action-gh-release@v1
       with:
         name: ${{ matrix.browser }}-${{ matrix.category }}-results
         path: TestResults/
