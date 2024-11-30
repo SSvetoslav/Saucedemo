@@ -1,25 +1,62 @@
-name: .NET
+name: .NET Selenium test - Saucedemo
 
 on:
   push:
     branches: [ "master" ]
-  pull_request:
-    branches: [ "master" ]
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        browser: [ chrome ]
+        category: [ PositiveTests, NegativeTests ]
 
     steps:
-    - uses: actions/checkout@v4
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: 8.0.x
-    - name: Restore dependencies
-      run: dotnet restore
-    - name: Build
-      run: dotnet build --no-restore
-    - name: Test
-      run: dotnet test --no-build --verbosity normal
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --no-restore
+
+      - name: Run Test
+        run: dotnet test --filter "(TestCategory=PositiveTests|TestCategory=NegativeTests)" --logger "trx;LogFileName=combined-results$(date +%Y%m%d%H%M%S).trx" --results-directory TestResults
+
+      - name: Retry tests on failure
+        run: | 
+          dotnet test --logger "trx;LogFileName=test-results-$(date +%Y%m%d%H%M%S).trx" --results-directory TestResults || dotnet test --logger "trx;LogFileName=test-results-$(date +%Y%m%d%H%M%S).trx" --results-directory TestResults
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.browser }}-${{ matrix.category }}-results
+          path: TestResults/
+
+      - name: List test result files
+        run: ls -la TestResults/
+
+      - name: Capture and upload screenshot on failure
+        if: failure()
+        run: |
+          echo "Test failed. Uploading screenshot..."
+          if [ -f "screenshot.png" ]; then
+            mkdir -p artifacts
+            mv screenshot.png artifacts/
+          else
+            echo "No screenshot found."
+          fi
+        continue-on-error: true
+
+      - name: Upload screenshot if test fails
+        if: failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: screenshot
+          path: artifacts/screenshot.png
