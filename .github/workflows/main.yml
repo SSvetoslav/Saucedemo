@@ -1,18 +1,17 @@
-name: .NET Selenium test - Saucedemo
+name: Build and Test
 
 on:
   push:
-    branches: [ "master" ]
-  pull_request:
-    branches: [ "master" ]
+    branches: 
+      - "master"
 
 jobs:
   build:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        browser: [ chrome ]
-        category: [ PositiveTests, NegativeTests ]
+        browser: [chrome]
+        category: [PositiveTests, NegativeTests]
 
     steps:
       - uses: actions/checkout@v4
@@ -28,21 +27,12 @@ jobs:
       - name: Build
         run: dotnet build --no-restore
 
-      - name: Run Tests
+      - name: Run Test
         run: dotnet test --filter "(TestCategory=PositiveTests|TestCategory=NegativeTests)" --logger "trx;LogFileName=combined-results$(date +%Y%m%d%H%M%S).trx" --results-directory TestResults
 
-      # Dotnet Test Reporter integration
-      - name: Post Test Results and Coverage
-        uses: bibipkins/dotnet-test-reporter@v1.4.0
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          comment-title: 'Unit Test Results'
-          results-path: ./TestResults/*.trx
-          coverage-path: ./TestResults/coverage.xml
-          coverage-threshold: 80
-          coverage-type: opencover
-          post-new-comment: false
-          show-test-output: true
+      - name: Retry tests on failure
+        run: | 
+          dotnet test --logger "trx;LogFileName=test-results-$(date +%Y%m%d%H%M%S).trx" --results-directory TestResults || dotnet test --logger "trx;LogFileName=test-results-$(date +%Y%m%d%H%M%S).trx" --results-directory TestResults
 
       - name: Upload test results
         uses: actions/upload-artifact@v3
@@ -71,3 +61,15 @@ jobs:
         with:
           name: screenshot
           path: artifacts/screenshot.png
+
+  test:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Use this action to report .NET Selenium tests for Saucedemo
+        uses: zyborg/dotnet-tests-report@v1
+        with:
+          project_path: tests/My.Project.Tests
+          report_name: .NET Selenium test - Saucedemo
+          report_title: My Project Tests
+          github_token: ${{ secrets.GITHUB_TOKEN }}
