@@ -1,54 +1,93 @@
-name: .NET Test with Allure Report
+name: .NET Selenium test - Saucedemo
 
 on:
   push:
-    branches:
-      - master
+    branches: [ "master" ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        browser: [chrome]
+        category: [PositiveTests, NegativeTests]
 
     steps:
-      # Checkout code
-      - name: Checkout code
-        uses: actions/checkout@v2
+      # Checkout the code
+      - uses: actions/checkout@v4
 
-      # Setup .NET SDK
+      # Setup .NET environment
       - name: Setup .NET
-        uses: actions/setup-dotnet@v2
+        uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '6.0.x'
+          dotnet-version: 8.0.x
 
       # Restore dependencies
       - name: Restore dependencies
         run: dotnet restore
 
       # Build the project
-      - name: Build the project
+      - name: Build
         run: dotnet build --no-restore
 
-      # Run tests and generate NUnit XML report
-      - name: Run tests and generate Allure results
-        run: dotnet test --logger "nunit;LogFileName=TestResults.xml"
+      # Run tests and generate results with a dynamic filename
+      - name: Run Test
+        run: dotnet test --filter "(TestCategory=PositiveTests|TestCategory=NegativeTests)" --logger "trx;LogFileName=combined-results$(date +%Y%m%d%H%M%S).trx" --results-directory TestResults
 
-      # Install Allure CLI
+      # Retry tests on failure (3 attempts)
+      - name: Retry tests on failure
+        run: |
+          attempt=0
+          max_attempts=3
+          while [ $attempt -lt $max_attempts ]; do
+            dotnet test --logger "trx;LogFileName=test-results-$(date +%Y%m%d%H%M%S).trx" --results-directory TestResults && break
+            attempt=$((attempt+1))
+            echo "Retrying... Attempt $attempt/$max_attempts"
+            sleep 10 # delay between retries
+          done
+
+      # Upload test results to GitHub artifact storage
+      - name: Upload test results
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.browser }}-${{ matrix.category }}-results
+          path: TestResults/
+
+      # List test result files for debugging purposes
+      - name: List test result files
+        run: ls -la TestResults/
+
+      # Capture screenshot on test failure and upload it
+      - name: Capture and upload screenshot on failure
+        if: failure()
+        run: |
+          echo "Test failed. Uploading screenshot..."
+          if [ -f "screenshot.png" ]; then
+            mkdir -p artifacts
+            mv screenshot.png artifacts/
+          else
+            echo "No screenshot found."
+          fi
+        continue-on-error: true
+
+      - name: Upload screenshot if test fails
+        if: failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: screenshot
+          path: artifacts/screenshot.png
+
+      # Install Allure CLI for generating reports
       - name: Install Allure CLI
         run: |
-          # Download and install Allure CLI
-          wget https://github.com/allure-framework/allure2/releases/download/2.14.0/allure-2.14.0.tgz
-          tar -zxvf allure-2.14.0.tgz
-          sudo mv allure-2.14.0 /usr/local/allure
-          sudo ln -s /usr/local/allure/allure-2.14.0/bin/allure /usr/local/bin/allure
+          wget -qO - https://dl.bintray.com/qameta/generic/allure/latest/allure-2.14.0.zip -O allure.zip
+          unzip allure.zip -d /opt/allure
+          sudo ln -s /opt/allure/allure-2.14.0/bin/allure /usr/local/bin/allure
 
-      # Verify allure is installed and accessible
-      - name: Verify Allure Installation
-        run: allure --version
-
-      # Generate Allure results (convert NUnit XML to Allure format)
-      - name: Generate Allure results
+      # Generate Allure report
+      - name: Generate Allure Report
         run: allure generate TestResults --output TestResults/allure-results
 
-      # Serve Allure report
-      - name: Serve Allure report
+      # Serve Allure report (optional, useful for local testing)
+      - name: Serve Allure Report
         run: allure serve TestResults/allure-results
