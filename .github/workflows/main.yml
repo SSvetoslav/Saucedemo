@@ -23,10 +23,13 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore
 
-    - name: Install npm and trx2html
+    - name: Install Node.js and npm
       run: |
-        sudo apt-get install -y npm
-        npm install -g trx2html
+        curl -sL https://deb.nodesource.com/setup_18.x | bash -
+        sudo apt-get install -y nodejs
+
+    - name: Install trx2html
+      run: npm install -g trx2html
     
     - name: Build
       run: dotnet build --no-restore
