@@ -22,9 +22,6 @@ jobs:
         
     - name: Restore dependencies
       run: dotnet restore
-
-    - name:  Install ReportUnit
-      run: dotnet tool install --global dotnet-reportgenerator-tool
     
     - name: Build
       run: dotnet build --no-restore
