@@ -19,7 +19,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 6.0.x
+          dotnet-version: 8.0.x
 
       - name: Restore dependencies
         run: dotnet restore
@@ -28,11 +28,20 @@ jobs:
         run: dotnet build --no-restore
 
       - name: Run Tests
-        run: dotnet test Tests/WEB/WebTest.cs --filter "(TestCategory=PositiveTests|TestCategory=NegativeTests)" --logger "trx;LogFileName=combined-results$(date +%Y%m%d%H%M%S).trx" --results-directory TestResults
+        run: |
+          if [ "${{ matrix.category }}" == "PositiveTests" ]; then
+            dotnet test Tests/WEB/Positives/PositiveTestLogin.cs --logger "trx;LogFileName=combined-results$(date +%Y%m%d%H%M%S).trx" --results-directory TestResults
+          else
+            dotnet test Tests/WEB/Negatives/NegativeTestsLogin.cs --logger "trx;LogFileName=combined-results$(date +%Y%m%d%H%M%S).trx" --results-directory TestResults
+          fi
 
       - name: Retry tests on failure
         run: |
-          dotnet test Tests/WEB/WebTest.cs --logger "trx;LogFileName=test-results-$(date +%Y%m%d%H%M%S).trx" --results-directory TestResults || dotnet test Tests/WEB/WebTest.cs --logger "trx;LogFileName=test-results-$(date +%Y%m%d%H%M%S).trx" --results-directory TestResults
+          if [ "${{ matrix.category }}" == "PositiveTests" ]; then
+            dotnet test Tests/WEB/Positives/PositiveTestLogin.cs --logger "trx;LogFileName=test-results-$(date +%Y%m%d%H%M%S).trx" --results-directory TestResults || dotnet test Tests/WEB/Positives/PositiveTestLogin.cs --logger "trx;LogFileName=test-results-$(date +%Y%m%d%H%M%S).trx" --results-directory TestResults
+          else
+            dotnet test Tests/WEB/Negatives/NegativeTestsLogin.cs --logger "trx;LogFileName=test-results-$(date +%Y%m%d%H%M%S).trx" --results-directory TestResults || dotnet test Tests/WEB/Negatives/NegativeTestsLogin.cs --logger "trx;LogFileName=test-results-$(date +%Y%m%d%H%M%S).trx" --results-directory TestResults
+          fi
 
       - name: Upload test results
         uses: actions/upload-artifact@v3
@@ -68,5 +77,5 @@ jobs:
       - name: Use action to generate test report
         uses: zyborg/dotnet-tests-report@v1
         with:
-          project_path: Tests/WEB/WebTest.cs
+          project_path: Tests/WEB/${{ matrix.category == 'PositiveTests' && 'Positives/Positive_Tests_Login.cs' || 'Negatives/Negative_Tests_Login.cs' }}
           report_name: '.NET Selenium test - Saucedemo'
