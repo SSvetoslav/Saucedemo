@@ -28,7 +28,6 @@ jobs:
         run: |
           dotnet restore
           dotnet tool install --global Selenium.WebDriver
-          dotnet tool install --global Selenium.WebDriver.ChromeDriver
       
       # Set up Selenium and run tests in parallel
       - name: Run tests in parallel on Chrome
