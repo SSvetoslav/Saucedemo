@@ -1,53 +1,59 @@
-name: Run Selenium Tests on Chrome
+name: Selenium test - Saucedemo
 
 on:
   push:
-    branches: [ master ]
+    branches: [ "master" ]
 
 jobs:
-  test:
+  execute-selenium-ui-tests:
     runs-on: ubuntu-latest
-    
+    strategy:
+      matrix:
+        browser: [ chrome ]
+        category: [ PositiveTests, NegativeTests ]
+
     steps:
-      - name: Checkout the repository
-        uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
-      - name: Set up .NET 6
-        uses: actions/setup-dotnet@v3
-        with:
-          dotnet-version: '6.0.x'
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: 6.0.x
+        
+    - name: Restore dependencies
+      run: dotnet restore
 
-      - name: Install dependencies
-        run: |
-          dotnet restore
-          dotnet tool restore
+    - name: Install ReportUnit
+      run: dotnet tool install --global dotnet-reportgenerator-tool
+    
+    - name: Build
+      run: dotnet build --no-restore
+      
+    - name: Run tests
+      run: |
+        dotnet test --filter "(TestCategory=PositiveTests|TestCategory=NegativeTests)" \
+        --logger "trx;LogFileName=combined-results$(date +%Y%m%d%H%M%S).trx" \
+        --results-directory TestResults
 
-      - name: Build the project
-        run: dotnet build
+    - name: Upload Test Results
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-results
+        path: TestResults/*.trx
 
-      - name: Run Tests
-        run: |
-          dotnet test --logger "nunit;LogFilePath=test-result.xml" --configuration Release
+    - name: Generate Test Report
+      run: |
+        mkdir -p reports
+        dotnet tool install --global NUnit.ConsoleRunner
+        nunit3-console TestResults/*.trx --result=reports/test-report.xml
 
-      - name: Upload Test Results
-        uses: actions/upload-artifact@v3
-        with:
-          name: test-results
-          path: test-result.xml
+    - name: Upload Test Report
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-report
+        path: reports/test-report.xml
 
-      - name: Generate Test Report
-        run: |
-          mkdir -p reports
-          dotnet tool install --global NUnit.ConsoleRunner
-          nunit3-console test-result.xml --result=reports/test-report.xml
-
-      - name: Upload Test Report
-        uses: actions/upload-artifact@v3
-        with:
-          name: test-report
-          path: reports/test-report.xml
-          
-      - name: Publish Test Report as HTML (Optional)
-        run: |
-          npx mocha --reporter mochawesome --reporter-options reportDir=reports,reportFilename=index
-        if: success()
+    - name: Publish Test Report as HTML (Optional)
+      run: |
+        npx mocha --reporter mochawesome --reporter-options reportDir=reports,reportFilename=index
+      if: success()
