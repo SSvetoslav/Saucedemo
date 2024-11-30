@@ -1,0 +1,53 @@
+name: Run Selenium Tests on Chrome
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v3
+
+      - name: Set up .NET 6
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '6.0.x'
+
+      - name: Install dependencies
+        run: |
+          dotnet restore
+          dotnet tool restore
+
+      - name: Build the project
+        run: dotnet build
+
+      - name: Run Tests
+        run: |
+          dotnet test --logger "nunit;LogFilePath=test-result.xml" --configuration Release
+
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-results
+          path: test-result.xml
+
+      - name: Generate Test Report
+        run: |
+          mkdir -p reports
+          dotnet tool install --global NUnit.ConsoleRunner
+          nunit3-console test-result.xml --result=reports/test-report.xml
+
+      - name: Upload Test Report
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-report
+          path: reports/test-report.xml
+          
+      - name: Publish Test Report as HTML (Optional)
+        run: |
+          npx mocha --reporter mochawesome --reporter-options reportDir=reports,reportFilename=index
+        if: success()
