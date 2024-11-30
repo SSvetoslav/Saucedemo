@@ -24,8 +24,7 @@ jobs:
       run: dotnet restore
 
     - name:  Install ReportUnit
-      run: |
-        dotnet tool install --global ReportUnit
+      run: dotnet tool install --global dotnet-reportgenerator-tool
     
     - name: Build
       run: dotnet build --no-restore
@@ -37,9 +36,8 @@ jobs:
       run: |
         dotnet test --logger "trx;LogFileName=test-results-$(date +%Y%m%d%H%M%S).trx" --results-directory TestResults || dotnet test --logger "trx;LogFileName=test-results-$(date +%Y%m%d%H%M%S).trx" --results-directory TestResults
         
-    - name: Convert TRX to HTML
-      run: | 
-          reportunit ./TestResults/test-results.trx ./TestResults/test-report.html
+    - name: Generate HTML Report from TRX
+      run: reportgenerator "-reports:./TestResults/test-results.trx" "-targetdir:./TestResults/HtmlReports" -reporttypes:Html
           
     - name: Upload test results
       uses: mikepenz/action-gh-release@v1
