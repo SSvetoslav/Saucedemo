@@ -3,6 +3,7 @@ name: .NET Selenium test - Saucedemo
 on:
   push:
     branches: [ "master" ]
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -59,3 +60,13 @@ jobs:
         with:
           name: screenshot
           path: artifacts/screenshot.png
+
+      # Integrating the dotnet-test-reporter to post test results in the PR comment
+      - name: Report Unit Test Results
+        uses: bibipkins/dotnet-test-reporter@v1.4.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          comment-title: 'Unit Test Results'
+          results-path: ./TestResults/*.trx
+          coverage-path: ./TestResults/coverage.xml
+          coverage-threshold: 80
