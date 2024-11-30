@@ -1,24 +1,38 @@
-name: Run example tests
+name: .NET Test with Allure Report
+
 on:
-  workflow_dispatch:
+  push:
+    branches:
+      - master
 
 jobs:
-    test:
-      name: Run example tests and upload results
-      env:
-       PROJECT_DIR: Example
-      
-      runs-on: windows-latest
-      
-      steps:
-      - name: Checkout
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
         uses: actions/checkout@v2
-      
-      - name: Restore packages, build and run tests
-        run: dotnet test ${{env.PROJECT_DIR}}/Saucedemo.csproj -- NUnit.TestOutputXml=./TestResults
-      
-      - name: Upload test results
-        uses: actions/upload-artifact@v2
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v2
         with:
-         name: Test results
-         path: ${{env.PROJECT_DIR}}/TestResults/Example.xml
+          dotnet-version: '6.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build the project
+        run: dotnet build --no-restore
+
+      - name: Run tests and generate Allure results
+        run: dotnet test --logger "nunit;LogFileName=TestResults.xml"
+
+      - name: Install Allure CLI
+        run: |
+          wget https://github.com/allure-framework/allure2/releases/download/2.14.0/allure-2.14.0.tgz
+          tar -zxvf allure-2.14.0.tgz
+          sudo mv allure-2.14.0 /usr/local/allure
+
+      - name: Serve Allure report
+        run: allure serve TestResults/allure-results
+
