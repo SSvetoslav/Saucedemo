@@ -3,6 +3,7 @@ name: .NET Selenium test - Saucedemo
 on:
   push:
     branches: [ "master" ]
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -59,3 +60,17 @@ jobs:
         with:
           name: screenshot
           path: artifacts/screenshot.png
+
+      - name: Test Reporter
+        uses: dorny/test-reporter@v1.9.1
+        with:
+          artifact: TestResults/*.trx
+          name: Test Report
+          path: TestResults/*.trx
+          reporter: dotnet-trx
+          list-suites: only-failed
+          list-tests: only-failed
+          max-annotations: 10
+          fail-on-error: true
+          fail-on-empty: true
+          only-summary: false
