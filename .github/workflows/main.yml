@@ -23,13 +23,9 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore
 
-    - name: Install Node.js and npm
+    - name:  Install ReportUnit
       run: |
-        curl -sL https://deb.nodesource.com/setup_18.x | bash -
-        sudo apt-get install -y nodejs
-
-    - name: Install trx2html
-      run: npm install -g trx2html
+        dotnet tool install --global ReportUnit
     
     - name: Build
       run: dotnet build --no-restore
@@ -41,11 +37,9 @@ jobs:
       run: |
         dotnet test --logger "trx;LogFileName=test-results-$(date +%Y%m%d%H%M%S).trx" --results-directory TestResults || dotnet test --logger "trx;LogFileName=test-results-$(date +%Y%m%d%H%M%S).trx" --results-directory TestResults
         
-    - name: Convert tests results to HTML
-      uses: mikepenz/action-gh-release@v1
-      with:
-        args: | 
-          npx trx2html ./TestResults/test-results.trx -o ./TestResults/test-report.html
+    - name: Convert TRX to HTML
+      run: | 
+          reportunit ./TestResults/test-results.trx ./TestResults/test-report.html
           
     - name: Upload test results
       uses: mikepenz/action-gh-release@v1
