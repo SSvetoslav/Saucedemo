@@ -64,10 +64,18 @@ namespace Saucedemo.Tests
             {
                 if (TestContext.CurrentContext.Result.Outcome.Status != TestStatus.Passed)
                 {
+                    //string fileName = Regex.Replace(TestContext.CurrentContext.Test.Name, "[^a-zA-Z0-9_]+", "");
+                    //var path = Directory.GetParent(Environment.CurrentDirectory).Parent.Parent.FullName;
+                    //var ss = ((ITakesScreenshot)Driver).GetScreenshot();
+                    //ss.SaveAsFile(path + "\\" + fileName + DateTime.Now.ToString("dd-MM-yyyy") + ".png");
+
+                    // new logic
                     string fileName = Regex.Replace(TestContext.CurrentContext.Test.Name, "[^a-zA-Z0-9_]+", "");
-                    var path = Directory.GetParent(Environment.CurrentDirectory).Parent.Parent.FullName;
+                    var path = Path.Combine(Environment.CurrentDirectory, "TestResults", "screenshots");
+                    Directory.CreateDirectory(path);
                     var ss = ((ITakesScreenshot)Driver).GetScreenshot();
-                    ss.SaveAsFile(path + "\\" + fileName + DateTime.Now.ToString("dd-MM-yyyy") + ".png");
+                    string filePath = Path.Combine(path, fileName + DateTime.Now.ToString("yyyy-MM-dd_HH-mm-ss") + ".png");
+                    ss.SaveAsFile(filePath);
 
                     Driver.Quit();
                     Driver.Dispose();
