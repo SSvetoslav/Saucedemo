@@ -10,29 +10,41 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Checkout code
       - name: Checkout code
         uses: actions/checkout@v2
 
+      # Setup .NET SDK
       - name: Setup .NET
         uses: actions/setup-dotnet@v2
         with:
           dotnet-version: '6.0.x'
 
+      # Restore dependencies
       - name: Restore dependencies
         run: dotnet restore
 
+      # Build the project
       - name: Build the project
         run: dotnet build --no-restore
 
+      # Run tests and generate NUnit XML report
       - name: Run tests and generate Allure results
         run: dotnet test --logger "nunit;LogFileName=TestResults.xml"
 
+      # Install Allure CLI
       - name: Install Allure CLI
         run: |
           wget https://github.com/allure-framework/allure2/releases/download/2.14.0/allure-2.14.0.tgz
           tar -zxvf allure-2.14.0.tgz
           sudo mv allure-2.14.0 /usr/local/allure
+          sudo ln -s /usr/local/allure/allure-2.14.0/bin/allure /usr/local/bin/allure
 
+      # Generate Allure results (convert NUnit XML to Allure format)
+      - name: Generate Allure results
+        run: |
+          allure generate TestResults --output TestResults/allure-results
+
+      # Serve Allure report (opens the report in the terminal, useful for viewing in CI)
       - name: Serve Allure report
         run: allure serve TestResults/allure-results
-
