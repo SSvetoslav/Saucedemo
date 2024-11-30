@@ -31,10 +31,13 @@ jobs:
       - name: Build
         run: dotnet build --no-restore
 
-      - name: Run Test
+      - name: Run Tests
         run: dotnet test --filter "(TestCategory=PositiveTests|TestCategory=NegativeTests)" --logger "trx;LogFileName=results.trx" --results-directory TestResults
 
-      - name: Upload test results
+      - name: Verify Test Results Directory
+        run: ls -la TestResults/
+
+      - name: Upload Test Results
         uses: actions/upload-artifact@v3
         with:
           name: TestResults
@@ -46,11 +49,12 @@ jobs:
           artifact: 'TestResults'
           name: '.NET Test Report'
           path: 'TestResults/*.trx'
-          path-replace-backslashes: 'false'
+          path-replace-backslashes: false
           reporter: 'dotnet-trx'
           list-suites: 'failed'
           list-tests: 'failed'
-          max-annotations: '10'
-          fail-on-error: 'true'
-          fail-on-empty: 'true'
+          max-annotations: 10
+          fail-on-error: true
+          fail-on-empty: true
+          only-summary: false
           token: '${{ secrets.GITHUB_TOKEN }}'
