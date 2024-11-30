@@ -9,22 +9,26 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        browser: [chrome]
-        shard: [1, 2]
+        browser: [ chrome, chrome ]
+        category: [ PositiveTests, NegativeTests ]
 
     steps:
     - uses: actions/checkout@v4
+    
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 6.0.x
+        
     - name: Restore dependencies
       run: dotnet restore
+      
     - name: Build
       run: dotnet build --no-restore
+      
     - name: Run tests
-      run: dotnet test --logger "trx;LogFileName=test-results-$(date +%Y%m%d%H%M%S).trx" --results-directory TestResults
-
+      run: dotnet test --filter "(TestCategory=PositiveTests|TestCategory=NegativeTests)" --logger "trx;LogFileName=combined-results$(date +%Y%m%d%H%M%S).trx" --results-directory TestResults
+      
     - name: Retry tests on failure
       run: |
         dotnet test --logger "trx;LogFileName=test-results-$(date +%Y%m%d%H%M%S).trx" --results-directory TestResults || dotnet test --logger "trx;LogFileName=test-results-$(date +%Y%m%d%H%M%S).trx" --results-directory TestResults
@@ -32,7 +36,7 @@ jobs:
     - name: Upload test results
       uses: actions/upload-artifact@v3
       with:
-        name: test-results
+        name: ${{ matrix.browser }}-${{ matrix.category }}-results
         path: TestResults/
 
     - name: List test result files
