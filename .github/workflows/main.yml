@@ -26,12 +26,8 @@ jobs:
       - name: Build
         run: dotnet build --no-restore
 
-      - name: Run Test
+      - name: Run Tests
         run: dotnet test --filter "(TestCategory=PositiveTests|TestCategory=NegativeTests)" --logger "trx;LogFileName=combined-results$(date +%Y%m%d%H%M%S).trx" --results-directory TestResults
-
-      - name: Retry tests on failure
-        run: | 
-          dotnet test --logger "trx;LogFileName=test-results-$(date +%Y%m%d%H%M%S).trx" --results-directory TestResults || dotnet test --logger "trx;LogFileName=test-results-$(date +%Y%m%d%H%M%S).trx" --results-directory TestResults
 
       - name: Upload test results
         uses: actions/upload-artifact@v3
@@ -60,13 +56,3 @@ jobs:
         with:
           name: screenshot
           path: artifacts/screenshot.png
-
-      # Integrating the dotnet-test-reporter to post test results in the PR comment
-      - name: Report Unit Test Results
-        uses: bibipkins/dotnet-test-reporter@v1.4.0
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          comment-title: 'Unit Test Results'
-          results-path: ./TestResults/*.trx
-          coverage-path: ./TestResults/coverage.xml
-          coverage-threshold: 80
