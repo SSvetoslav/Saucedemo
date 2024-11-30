@@ -1,10 +1,13 @@
-﻿using Saucedemo.Credentials;
+﻿using NUnit.Allure.Attributes;
+using NUnit.Allure.Core;
+using Saucedemo.Credentials;
 using Saucedemo.Utils;
 using Saucedemo.Utils.Products;
 
 namespace Saucedemo.Tests.WEB.Positives
 {
     [TestFixture(Browser.Chrome)]
+    [AllureNUnit]
     [Parallelizable]
     [Category("PositiveTests")]
     internal class Positive_Tests_Login : WebTest
@@ -12,7 +15,7 @@ namespace Saucedemo.Tests.WEB.Positives
         public Positive_Tests_Login(Browser browser) : base(browser) {}
         private string priceinventoryPage;
 
-        [Test, Order(1)]
+        [Test, AllureDescription("Description of the test")]
         public void Successfully_Login_With_Valid_Credentials_And_InventoryPage_Is_Open()
         {
             _loginPage.NavigateToLoginPage();
@@ -21,7 +24,7 @@ namespace Saucedemo.Tests.WEB.Positives
             _inventoryPage.IsInventoryPageLoaded();
         }
 
-        [Test, Order(2)]
+        [Test, AllureDescription("Description of the test")]
         public void Successfully_Add_Items_To_The_Cart()
         {
             _loginPage.NavigateToLoginPage();
@@ -36,7 +39,7 @@ namespace Saucedemo.Tests.WEB.Positives
             _cartPage.AssertThatPriceFromInventoryPageIsTheSameAtTheCartPage(priceinventoryPage);
         }
 
-        [Test, Order(3)]
+        [Test, AllureDescription("Description of the test")]
         public void Successfully_Remove_Item()
         {
             _loginPage.NavigateToLoginPage();
@@ -49,7 +52,7 @@ namespace Saucedemo.Tests.WEB.Positives
             _inventoryPage.AssertThatNoItemsAddedToShoppingCart();
         }
 
-        [Test, Order(4)]
+        [Test, AllureDescription("Description of the test")]
         public void Successfully_Purchase_Item()
         {
             _loginPage.NavigateToLoginPage();

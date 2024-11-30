@@ -1,9 +1,12 @@
-﻿using Saucedemo.Credentials;
+﻿using NUnit.Allure.Attributes;
+using NUnit.Allure.Core;
+using Saucedemo.Credentials;
 using Saucedemo.Utils;
 
 namespace Saucedemo.Tests.WEB.Negatives
 {
     [TestFixture(Browser.Chrome)]
+    [AllureNUnit]
     [Parallelizable]
     [Category("NegativeTests")]
     internal class Negative_Tests_Login : WebTest
@@ -24,7 +27,7 @@ namespace Saucedemo.Tests.WEB.Negatives
             _loginPage.AssertThatErrorMessageWrongCredentialsIsDispalyed();
         }
 
-        [Test]
+        [Test, AllureDescription("Description of the test")]
         public void ErrorMessage_For_Reduired_Username_Field_Is_Displayed()
         {
             _loginPage.NavigateToLoginPage();
@@ -34,7 +37,7 @@ namespace Saucedemo.Tests.WEB.Negatives
 
         }
 
-        [Test]
+        [Test, AllureDescription("Description of the test")]
         public void ErrorMessage_For_Reduired_Password_Field_Is_Displayed()
         {
             _loginPage.NavigateToLoginPage();
