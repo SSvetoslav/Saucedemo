@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        browser: [ chrome, chrome ]
+        browser: [ chrome ]
         category: [ PositiveTests, NegativeTests ]
 
     steps:
@@ -22,7 +22,12 @@ jobs:
         
     - name: Restore dependencies
       run: dotnet restore
-      
+
+    - name: Install npm and trx2html
+      run: |
+        sudo apt-get install -y npm
+        npm install -g trx2html
+    
     - name: Build
       run: dotnet build --no-restore
       
@@ -32,7 +37,13 @@ jobs:
     - name: Retry tests on failure
       run: |
         dotnet test --logger "trx;LogFileName=test-results-$(date +%Y%m%d%H%M%S).trx" --results-directory TestResults || dotnet test --logger "trx;LogFileName=test-results-$(date +%Y%m%d%H%M%S).trx" --results-directory TestResults
-
+        
+    - name: Convert tests results to HTML
+      uses: mikepenz/action-gh-release@v2
+      with:
+        args: | 
+          npx trx2html ./TestResults/test-results.trx -o ./TestResults/test-report.html
+          
     - name: Upload test results
       uses: actions/upload-artifact@v3
       with:
