@@ -1,8 +1,8 @@
-name: Build and Test
+name: .NET Selenium Tests for Saucedemo
 
 on:
   push:
-    branches: 
+    branches:
       - "master"
 
 jobs:
@@ -19,7 +19,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 8.0.x
+          dotnet-version: 6.0.x
 
       - name: Restore dependencies
         run: dotnet restore
@@ -27,12 +27,12 @@ jobs:
       - name: Build
         run: dotnet build --no-restore
 
-      - name: Run Test
-        run: dotnet test --filter "(TestCategory=PositiveTests|TestCategory=NegativeTests)" --logger "trx;LogFileName=combined-results$(date +%Y%m%d%H%M%S).trx" --results-directory TestResults
+      - name: Run Tests
+        run: dotnet test Tests/WEB/WebTest.cs --filter "(TestCategory=PositiveTests|TestCategory=NegativeTests)" --logger "trx;LogFileName=combined-results$(date +%Y%m%d%H%M%S).trx" --results-directory TestResults
 
       - name: Retry tests on failure
-        run: | 
-          dotnet test --logger "trx;LogFileName=test-results-$(date +%Y%m%d%H%M%S).trx" --results-directory TestResults || dotnet test --logger "trx;LogFileName=test-results-$(date +%Y%m%d%H%M%S).trx" --results-directory TestResults
+        run: |
+          dotnet test Tests/WEB/WebTest.cs --logger "trx;LogFileName=test-results-$(date +%Y%m%d%H%M%S).trx" --results-directory TestResults || dotnet test Tests/WEB/WebTest.cs --logger "trx;LogFileName=test-results-$(date +%Y%m%d%H%M%S).trx" --results-directory TestResults
 
       - name: Upload test results
         uses: actions/upload-artifact@v3
@@ -64,12 +64,9 @@ jobs:
 
   test:
     runs-on: ubuntu-latest
-    needs: build
     steps:
-      - name: Use this action to report .NET Selenium tests for Saucedemo
+      - name: Use action to generate test report
         uses: zyborg/dotnet-tests-report@v1
         with:
-          project_path: tests/My.Project.Tests
-          report_name: .NET Selenium test - Saucedemo
-          report_title: My Project Tests
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          project_path: Tests/WEB/WebTest.cs
+          report_name: '.NET Selenium test - Saucedemo'
