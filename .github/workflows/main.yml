@@ -1,60 +1,24 @@
-name: .NET Selenium test - Saucedemo
-
+name: Run example tests
 on:
-  push:
-    branches: [ "master" ]
-
-permissions:
-  contents: read
-  checks: write
-  actions: write
+  workflow_dispatch:
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        browser: [ chrome ]
-        category: [ PositiveTests, NegativeTests ]
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup .NET
-        uses: actions/setup-dotnet@v4
+    test:
+      name: Run example tests and upload results
+      env:
+       PROJECT_DIR: Example
+      
+      runs-on: windows-latest
+      
+      steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      
+      - name: Restore packages, build and run tests
+        run: dotnet test ${{env.PROJECT_DIR}}/Saucedemo.csproj -- NUnit.TestOutputXml=./TestResults
+      
+      - name: Upload test results
+        uses: actions/upload-artifact@v2
         with:
-          dotnet-version: 8.0.x
-
-      - name: Restore dependencies
-        run: dotnet restore
-
-      - name: Build
-        run: dotnet build --no-restore
-
-      - name: Run Tests
-        run: dotnet test --filter "(TestCategory=PositiveTests|TestCategory=NegativeTests)" --logger "trx;LogFileName=results.trx" --results-directory TestResults
-
-      - name: Verify Test Results Directory
-        run: ls -la TestResults/
-
-      - name: Upload Test Results
-        uses: actions/upload-artifact@v3
-        with:
-          name: TestResults
-          path: TestResults/*.trx
-
-      - name: Test Reporter
-        uses: dorny/test-reporter@v1
-        with:
-          artifact: 'TestResults'
-          name: '.NET Test Report'
-          path: 'TestResults/*.trx'
-          path-replace-backslashes: false
-          reporter: 'dotnet-trx'
-          list-suites: 'failed'
-          list-tests: 'failed'
-          max-annotations: 10
-          fail-on-error: true
-          fail-on-empty: true
-          only-summary: false
-          token: '${{ secrets.GITHUB_TOKEN }}'
+         name: Test results
+         path: ${{env.PROJECT_DIR}}/TestResults/Example.xml
