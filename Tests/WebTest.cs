@@ -12,7 +12,7 @@ namespace Saucedemo.Tests
 {
     internal abstract class WebTest
     {
-        private Browser browser;
+        private readonly Browser browser;
         public WebTest(Browser browser)
         {
             this.browser = browser;

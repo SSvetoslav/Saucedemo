@@ -6,6 +6,7 @@ namespace Saucedemo.Tests.WEB.Positives
 {
     [TestFixture(Browser.Chrome)]
     [Parallelizable]
+    [Category("PositiveTests")]
     internal class Positive_Tests_Login : WebTest
     {
         public Positive_Tests_Login(Browser browser) : base(browser) {}

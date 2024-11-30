@@ -11,10 +11,10 @@ namespace Saucedemo.Pages.LoginPage
     internal class LoginPage : WebPage
     {
         // Locators
-        private By InputUsernameField = By.Id("user-name");
-        private By InputPasswordField = By.Id("password");
-        private By InputLoginButton = By.Id("login-button");
-        private By TextErrorMessage = By.CssSelector(".error-message-container.error");
+        private readonly By InputUsernameField = By.Id("user-name");
+        private readonly By InputPasswordField = By.Id("password");
+        private readonly By InputLoginButton = By.Id("login-button");
+        private readonly By TextErrorMessage = By.CssSelector(".error-message-container.error");
         private const string ErromMessageInvalidUsernameOrPass = "Epic sadface: Username and password do not match any user in this service";
         private const string ErromMessageEmptyUsername = "Epic sadface: Username is required";
         private const string ErromMessagEmptyPass = "Epic sadface: Password is required";

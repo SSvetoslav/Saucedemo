@@ -5,6 +5,7 @@ namespace Saucedemo.Tests.WEB.Negatives
 {
     [TestFixture(Browser.Chrome)]
     [Parallelizable]
+    [Category("NegativeTests")]
     internal class Negative_Tests_Login : WebTest
     {
         public Negative_Tests_Login(Browser browser) : base(browser) {}
