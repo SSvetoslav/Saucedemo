@@ -1,64 +1,62 @@
-name: Selenium test - Saucedemo
+name: Run Tests in Parallel with Multiple .NET Versions
 
 on:
   push:
-    branches: [ "master" ]
-  pull_request:
-    branches: [ "master" ]
+    branches:
+      - master
 
 jobs:
-  execute-seleium-iu-tests:
+  run-tests:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        browser: [chrome]
-        shard: [1, 2, 3]
+        dotnet-version: [ '6.0.x' ]
+        browser: [ 'chrome' ]
+      fail-fast: false
 
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: 6.0.x
+      # Set up .NET SDK versions
+      - name: Setup dotnet ${{ matrix.dotnet-version }}
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: ${{ matrix.dotnet-version }}
+      
+      # Install dependencies
+      - name: Install dependencies
+        run: |
+          dotnet restore
+          dotnet tool install --global Selenium.WebDriver
+      
+      # Set up Selenium and run tests in parallel
+      - name: Run tests in parallel on Chrome
+        run: |
+          # Start Selenium Grid or WebDriver on different Chrome instances (adjust as needed)
+          docker-compose up -d  # Start the required services (like Selenium Grid)
 
-    - name: Restore dependencies
-      run: dotnet restore
+          # Run tests on the parallel browsers
+          dotnet test --filter Browser=${{ matrix.browser }} --logger "trx;LogFileName=TestResults-${{ matrix.dotnet-version }}.trx" --results-directory "TestResults-${{ matrix.dotnet-version }}"
 
-    - name: Build
-      run: dotnet build --no-restore
+      # Take screenshots on test failure
+      - name: Take screenshot if test fails
+        if: ${{ failure() }}
+        run: |
+          mkdir -p screenshots
+          cp -r $(pwd)/TestResults-${{ matrix.dotnet-version }}/*.png screenshots/
 
-    - name: Run tests
-      run: dotnet test --logger "trx;LogFileName=test-results-$(date +%Y%m%d%H%M%S).trx" --results-directory TestResults
-
-    - name: Retry tests on failure
-      run: |
-        dotnet test --logger "trx;LogFileName=test-results-$(date +%Y%m%d%H%M%S).trx" --results-directory TestResults || dotnet test --logger "trx;LogFileName=test-results-$(date +%Y%m%d%H%M%S).trx" --results-directory TestResults
-
-    - name: Upload test results
-      uses: actions/upload-artifact@v3
-      with:
-        name: test-results
-        path: TestResults/
-
-    - name: List test result files
-      run: ls -la TestResults/
-
-    - name: Capture and upload screenshot on failure
-      if: failure()
-      run: |
-        echo "Test failed. Uploading screenshot..."
-        if [ -f "screenshot.png" ]; then
-          mkdir -p artifacts
-          mv screenshot.png artifacts/
-        else
-          echo "No screenshot found."
-        fi
-      continue-on-error: true
-
-    - name: Upload screenshot if test fails
-      if: failure()
-      uses: actions/upload-artifact@v3
-      with:
-        name: screenshot
-        path: artifacts/screenshot.png
+      # Upload test results
+      - name: Upload dotnet test results
+        uses: actions/upload-artifact@v4
+        with:
+          name: dotnet-results-${{ matrix.dotnet-version }}
+          path: TestResults-${{ matrix.dotnet-version }}
+        if: ${{ always() }}
+      
+      # Upload screenshots on failure
+      - name: Upload screenshots on failure
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: screenshots
+          path: screenshots/
