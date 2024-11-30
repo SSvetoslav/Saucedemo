@@ -3,6 +3,8 @@ name: .NET Selenium test - Saucedemo
 on:
   push:
     branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
 
 jobs:
   build:
@@ -28,6 +30,19 @@ jobs:
 
       - name: Run Tests
         run: dotnet test --filter "(TestCategory=PositiveTests|TestCategory=NegativeTests)" --logger "trx;LogFileName=combined-results$(date +%Y%m%d%H%M%S).trx" --results-directory TestResults
+
+      # Dotnet Test Reporter integration
+      - name: Post Test Results and Coverage
+        uses: bibipkins/dotnet-test-reporter@v1.4.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          comment-title: 'Unit Test Results'
+          results-path: ./TestResults/*.trx
+          coverage-path: ./TestResults/coverage.xml
+          coverage-threshold: 80
+          coverage-type: opencover
+          post-new-comment: false
+          show-test-output: true
 
       - name: Upload test results
         uses: actions/upload-artifact@v3
