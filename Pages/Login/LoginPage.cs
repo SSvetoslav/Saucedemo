@@ -17,7 +17,7 @@ namespace Saucedemo.Pages.LoginPage
         private By TextErrorMessage = By.CssSelector(".error-message-container.error");
         private const string ErromMessageInvalidUsernameOrPass = "Epic sadface: Username and password do not match any user in this service";
         private const string ErromMessageEmptyUsername = "Epic sadface: Username is required";
-        private const string ErromMessagEmptyPass = "Epic sadface: Password is required123";
+        private const string ErromMessagEmptyPass = "Epic sadface: Password is required";
 
         private const string mainUrl = "https://www.saucedemo.com/";
 
