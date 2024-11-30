@@ -35,16 +35,20 @@ jobs:
       # Install Allure CLI
       - name: Install Allure CLI
         run: |
+          # Download and install Allure CLI
           wget https://github.com/allure-framework/allure2/releases/download/2.14.0/allure-2.14.0.tgz
           tar -zxvf allure-2.14.0.tgz
           sudo mv allure-2.14.0 /usr/local/allure
           sudo ln -s /usr/local/allure/allure-2.14.0/bin/allure /usr/local/bin/allure
 
+      # Verify allure is installed and accessible
+      - name: Verify Allure Installation
+        run: allure --version
+
       # Generate Allure results (convert NUnit XML to Allure format)
       - name: Generate Allure results
-        run: |
-          allure generate TestResults --output TestResults/allure-results
+        run: allure generate TestResults --output TestResults/allure-results
 
-      # Serve Allure report (opens the report in the terminal, useful for viewing in CI)
+      # Serve Allure report
       - name: Serve Allure report
         run: allure serve TestResults/allure-results
