@@ -37,20 +37,23 @@ How to Run Tests Locally
 Clone the repository:
 
 bash
-Copy code
-git clone <repository_url>  
-cd <repository_directory>  
+    Copy code
+    
+    git clone <repository_url>  
+    
+    cd <repository_directory>  
+    
 Restore dependencies:
 
-bash
-Copy code
-dotnet restore  
-Run the tests:
+bash:
 
-bash
-Copy code
-dotnet test  
-GitHub Actions Workflow
+    dotnet restore 
+
+    Run the tests:
+
+    dotnet test  
+
+GitHub Actions Workflow :
 The workflow is defined in /.github/workflows/selenium_tests.yml. Key features:
 
 Parallel Execution: Runs tests concurrently to optimize runtime.
