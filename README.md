@@ -33,9 +33,6 @@ Copy code
 └── .gitignore                # Ignored files 
 
 Prerequisites
-Install .NET SDK.
-Install Google Chrome and ensure it is updated.
-Download and set up the ChromeDriver.
 How to Run Tests Locally
 Clone the repository:
 
@@ -70,3 +67,5 @@ After the workflow execution:
 Navigate to the Actions tab in the GitHub repository.
 Select the latest run and locate the "Artifacts" section.
 Download the test report artifact for detailed results.
+
+NOTE: I am using the latest version of Selenium WebDriver and it is not necessary to specify the path to 'chromedriver.exe'.
